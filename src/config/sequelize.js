@@ -22,7 +22,15 @@ export const development = {
 };
 
 export const test = {
-  ...defaultConfig,
+  dialect: 'postgres',
+  username: DB_USER,
+  password: DB_PASSWORD,
+  database: `${DB_NAME}-test`,
+  host: DB_HOST,
+  port: Number(DB_PORT),
+  define: {
+    paranoid: true,
+  },
   logging: false,
 };
 
