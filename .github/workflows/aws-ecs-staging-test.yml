@@ -1,0 +1,114 @@
+# This workflow will build and push a new container image to Amazon ECR,
+# and then will deploy a new task definition to Amazon ECS, when there is a push to the "staging" branch.
+#
+# To use this workflow, you will need to complete the following set-up steps:
+#
+# 1. Create an ECR repository to store your images.
+#    For example: `aws ecr create-repository --repository-name my-ecr-repo --region us-east-2`.
+#    Replace the value of the `ECR_REPOSITORY` environment variable in the workflow below with your repository's name.
+#    Replace the value of the `AWS_REGION` environment variable in the workflow below with your repository's region.
+#
+# 2. Create an ECS task definition, an ECS cluster, and an ECS service.
+#    For example, follow the Getting Started guide on the ECS console:
+#      https://us-east-2.console.aws.amazon.com/ecs/home?region=us-east-2#/firstRun
+#    Replace the value of the `ECS_SERVICE` environment variable in the workflow below with the name you set for the Amazon ECS service.
+#    Replace the value of the `ECS_CLUSTER` environment variable in the workflow below with the name you set for the cluster.
+#
+# 3. Store your ECS task definition as a JSON file in your repository.
+#    The format should follow the output of `aws ecs register-task-definition --generate-cli-skeleton`.
+#    Replace the value of the `ECS_TASK_DEFINITION` environment variable in the workflow below with the path to the JSON file.
+#    Replace the value of the `CONTAINER_NAME` environment variable in the workflow below with the name of the container
+#    in the `containerDefinitions` section of the task definition.
+#
+# 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+#    See the documentation for each action used below for the recommended IAM policies for this IAM user,
+#    and best practices on handling the access key credentials.
+
+name: Test Github actions
+
+on:
+  workflow_dispatch:
+    branches:
+      - test_branch
+
+env:
+  AWS_REGION: us-east-1                                    # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: api-autority-staging-repository          # set this to your Amazon ECR repository name
+  ECS_SERVICE:  api-autority-stagin-service                # set this to your Amazon ECS service name
+  ECS_CLUSTER: api-autority-stagin-cluster                 # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: task-definition.json                # set this to the path to your Amazon ECS task definition
+  CONTAINER_NAME: api-autority-staging-container           # set this to the name of the container in the
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Test actions
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    # - name: Make envfile
+    #   uses: SpicyPizza/create-envfile@v1.3
+    #   with:
+    #     envkey_PATH_UPLOAD: ${{ secrets.STAGING_PATH_UPLOAD }}
+    #     envkey_EMAIL_HOST: ${{ secrets.STAGING_EMAIL_HOST }}
+    #     envkey_EMAIL_USER: ${{ secrets.STAGING_EMAIL_USER }}
+    #     envkey_EMAIL_PASSWORD: ${{ secrets.STAGING_EMAIL_PASSWORD }}
+    #     envkey_SEED: ${{ secrets.STAGING_SEED }}
+    #     envkey_PARKING_FREE_TIME: ${{ secrets.STAGING_PARKING_FREE_TIME }}
+    #     envkey_APP_LINK_URL: ${{ secrets.STAGING_APP_LINK_URL }}
+    #     envkey_TRANSACTION_RESPONSE_REDIRECT_ROUTE: ${{ secrets.STAGING_TRANSACTION_RESPONSE_REDIRECT_ROUTE }}
+    #     envkey_CONFIG_FREE_TIME: ${{ secrets.STAGING_CONFIG_FREE_TIME }}
+    #     envkey_PORT: ${{ secrets.STAGING_PORT }}
+    #     envkey_NODE_ENV: prod
+    #     envkey_URL_WEB: ${{ secrets.STAGING_URL_WEB }}
+    #     envkey_URL_SERVER: ${{ secrets.STAGING_URL_SERVER }}
+    #     envkey_DB_HOST: ${{ secrets.STAGING_DB_HOST }}
+    #     envkey_DB_USER: ${{ secrets.STAGING_DB_USER }}
+    #     envkey_DB_DATABASE: ${{ secrets.STAGING_DB_DATABASE }}
+    #     envkey_DB_PASS: ${{ secrets.STAGING_DB_PASS }}
+    #     envkey_EMAIL_RECEIVER_DEVELOP: ${{ secrets.STAGING_EMAIL_RECEIVER_DEVELOP }}
+    #     envkey_URL_METROPARQUEO: ${{ secrets.STAGING_URL_METROPARQUEO }}
+    #     envkey_EMAIL_METROPARQUEO: ${{ secrets.STAGING_EMAIL_METROPARQUEO }}
+    #     envkey_PASS_METROPARQUEO: ${{ secrets.STAGING_PASS_METROPARQUEO }}
+    #     envkey_METROPARQUEO_REFERENCE_ID: ${{ secrets.STAGING_METROPARQUEO_REFERENCE_ID }}
+    #     envkey_URL_PLACETOPAY: ${{ secrets.STAGING_URL_PLACETOPAY }}
+    #     envkey_LOGIN_PLACETOPAY: ${{ secrets.STAGING_LOGIN_PLACETOPAY }}
+    #     envkey_SECRETKEY_PLACETOPAY: ${{ secrets.STAGING_SECRETKEY_PLACETOPAY }}
+    #     envkey_LOCALE_PLACETOPAY: ${{ secrets.STAGING_LOCALE_PLACETOPAY }}
+    #     envkey_ACTIVE_PLACETOPAY_CRONJOB: ${{ secrets.STAGING_ACTIVE_PLACETOPAY_CRONJOB }}
+    #     envkey_PRIVATE_KEY_STRIPE: ${{ secrets.STAGING_PRIVATE_KEY_STRIPE }}
+    #     envkey_SENTRY_DSN: ${{ secrets.STAGING_SENTRY_DSN }}
+    #     envkey_ACTIVE_AD_MOB: ${{ secrets.STAGING_ACTIVE_AD_MOB }}
+    #     envkey_SHOW_ONLY_AD_MOB_ON_HOME: ${{ secrets.STAGING_SHOW_ONLY_AD_MOB_ON_HOME }}
+    #     envkey_APP_ID_OS: ${{ secrets.STAGING_APP_ID_OS }}
+    #     envkey_API_KEY_OS: ${{ secrets.STAGING_API_KEY_OS }}
+    #     envkey_API_KEY_CONTIFICO: ${{ secrets.STAGING_API_KEY_CONTIFICO }}
+    #     envkey_API_TOKEN_CONTIFICO: ${{ secrets.STAGING_API_TOKEN_CONTIFICO }}
+    #     envkey_GOOGLE_CLIENT_ID: ${{ secrets.STAGING_GOOGLE_CLIENT_ID }}
+    #     envkey_GOOGLE_CLIENT_ID_IOS: ${{ secrets.STAGING_GOOGLE_CLIENT_ID_IOS }}
+    #     file_name: .env
+    #     fail_on_empty: false
+
+    - name: Run custom database queries
+      env:
+        NODE_ENV: prod
+        PGPASSWORD: ${{ secrets.STAGING_DB_PASS }}
+      run: psql -d postgresql://postgres@staging-autority-server.cmokc7cf6xfs.us-east-1.rds.amazonaws.com/autority -f create-table.sql
+      working-directory: ./database/scripts
